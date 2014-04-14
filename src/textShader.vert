@@ -3,18 +3,17 @@
 attribute vec2 position;
 attribute vec2 uv;
 
-varying vec2 uv_o;
+varying vec2 v_textureCoordinate;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 mvp;
-
+uniform vec2 charOffset;
 
 void main(){
 
-
-	gl_Position = mvp * vec4(position, 0, 1);
-
-
+	gl_Position = mvp * vec4(position + charOffset, 0, 1);
+	
 	// UV of the vertex. No special space for this one.
-	uv_o = uv;
+	v_textureCoordinate = uv;
 }
+
