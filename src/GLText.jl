@@ -5,21 +5,25 @@ export getFont,GLFont, TextField, StyledTextSegment, TextCursor
 
 
 immutable StyledTextSegment
-	offset::Int
-	endof::Int
+	segment::Range
 	style::Dict{ASCIIString, Any}
 end
 type TextCursor
-	intend::Float32
 	x::Float32
 	y::Float32
+	intend::Float32
 end
 type TextField
 	text::MutableASCIIString
 	styles::Array{StyledTextSegment, 1}
-	selection::StyledTextSegment
+	selection::Range
 	lines::Int
-	start::TextCursor
+	function TextField()
+		lines = count(x -> x == '\n' || x == '\r', text)
+		defaultStyle = Dict{ASCIIString, Any}(["textColor" => Float32[0,0,0,1], "backgroundColor" => Float32[0,0,0,0]])
+		styles = [StyledTextSegment(1:length(text), defaultStyle)]
+		new(text, styles, length(text):length(text), lines)
+	end
 end
 
 
@@ -106,7 +110,7 @@ function render(text::Union(MutableASCIIString, ASCIIString), cursor::TextCursor
     end
 end
 function render(t::TextField, font::GLFont, displayableAray::Shape = Rectangle(0, 0, 9999999,9999999))
-	startCursor = deepcopy(t.start)
+	startCursor = TextCursor(t.boundingBox.x, t.boundingBox.y + t.boundingBox.h, t.boundingBox.x)
 	for elem in t.styles
 		@assert elem.offset > 0
 		@assert elem.endof <= length(t.text)
@@ -114,7 +118,7 @@ function render(t::TextField, font::GLFont, displayableAray::Shape = Rectangle(0
 		for style in elem.style
 			render(style..., font.gl.program.id)
 		end
-		render(t.text[elem.offset:elem.endof], startCursor, font, displayableAray)
+		render(t.text[elem.segment], startCursor, font, displayableAray)
 	end
 end
 
