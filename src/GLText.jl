@@ -1,11 +1,11 @@
 module GLText
 using ModernGL, GLUtil, Events
 
-export getFont,GLFont, TextField, StyledTextSegment, TextCursor, FontProperties
+export getFont,GLFont, TextField, StyledTextSegment, TextCursor, FontProperties, buildNewLineIndexes, findLine
 
 
 immutable StyledTextSegment
-	segment::Range
+	segment::UnitRange{Int}
 	style::Dict{ASCIIString, Any}
 end
 type TextCursor
@@ -13,35 +13,70 @@ type TextCursor
 	y::Float32
 	intend::Float32
 end
+
 type TextField
 	text::String
+	newLineIndexes::Array{UnitRange{Int}, 1}
 	styles::Array{StyledTextSegment, 1}
 	selection::Range
-	lines::Int
 	x::Float32
 	y::Float32
-	cursor::Int
-
-	function TextField(text::String, x, y)
-		lines 			= count(x -> x == '\n' || x == '\r', text) + 1
+	function TextField(text::String, x::Real, y::Real)
 		defaultStyle 	= Dict{ASCIIString, Any}(["textColor" => Float32[0,0,0,1], "backgroundColor" => Float32[0,0,0,0]])
 		styles 			= [StyledTextSegment(1:length(text), defaultStyle)]
-		new(text, styles, length(text):length(text), lines, x, y, length(text))
+		new(text, buildNewLineIndexes(text), styles, length(text):length(text)-1, float32(x), float32(y))
 	end
 
-	function TextField(text::String, styles::Array{StyledTextSegment, 1}, x, y)
-		lines 			= count(char -> char == '\n' || char == '\r', text)
-		new(text, styles, length(text):length(text), lines, x, y, length(text))
+	function TextField(text::String, styles::Array{StyledTextSegment, 1}, x::Real, y::Real)
+		new(text, buildNewLineIndexes(text), styles, length(text):length(text)-1, float32(x), float32(y))
 	end
 
 	function TextField(text::String,
 			styles::Array{StyledTextSegment, 1},
 			selection::Range,
-			lines::Int,
-			x, y)
-		new(text, styles, selection, lines, x, y, length(text))
+			x::Real, y::Real)
+		new(text, buildNewLineIndexes(text), styles, selection, float32(x), float32(y))
 	end
 end
+
+function buildNewLineIndexes(text::String)
+	newLineIndexes = UnitRange{Int}[]
+	index = 0
+	for elem in text
+		if elem == '\n' || elem == '\r'
+			if isempty(newLineIndexes)
+				push!(newLineIndexes, 1:index)
+			else
+				lastIndex = last(newLineIndexes[end]) + 2
+				push!(newLineIndexes, lastIndex:index)
+			end
+			lineLength = 0
+		end
+		index += 1
+	end
+	if isempty(newLineIndexes)
+		push!(newLineIndexes, 1:length(text))
+	else
+		lastIndex = last(newLineIndexes[end]) + 2
+		push!(newLineIndexes, lastIndex:length(text))
+	end
+	newLineIndexes
+end
+
+function findLine(newLineIndexes::Array{UnitRange{Int}, 1}, cursor::Int)
+	currentLine 		= newLineIndexes[1]
+	currentLineIndex 	= 1
+	index 				= 1
+	for elem in newLineIndexes
+		if in(cursor, elem)
+			return index, elem
+		end
+		index += 1
+	end
+	return currentLineIndex, currentLine
+end
+
+
 
 type FontProperties
 	lineHeight::GLfloat
@@ -124,17 +159,34 @@ function render(text::String, cursor::TextCursor, font::GLFont, displayableAray:
         end
     end
 end
+
+global selectionStyle = Dict{ASCIIString, Any}(["textColor" => Float32[0,0,0,0], "backgroundColor" => Float32[0.02,0.8,0.01,0.2]])
+
 function render(t::TextField, font::GLFont, displayableAray::Shape = Rectangle(0, 0, 9999999,9999999))
 	render(font.gl)
+
+	startLine, line = findLine(t.newLineIndexes, first(t.selection))
+	xPosition = first(t.selection) - first(line)
+	cursorX = t.x + (xPosition * font.properties.advance)
+	cursorY = t.y - ((startLine-1) * font.properties.lineHeight)
+	selectionStart =  TextCursor(cursorX, cursorY, 0)
+	render(selectionStyle, font.gl.program.id)
+	if length(t.selection) < 1
+		render("|", TextCursor(cursorX + (font.properties.advance / 2f0), cursorY, 0), font, displayableAray)
+	else
+		#first approach, just render selection as a blank string with backgroundcolor
+		selectionString = map(x -> (x == '\r' || x == '\n') ? x : " ", text[chr2ind(t.text, t.selection.start):chr2ind(t.text, last(t.selection))])
+		render(selectionString, TextCursor(cursorX, cursorY, 0), font, displayableAray)
+	end
 	startCursor = TextCursor(t.x, t.y, t.x)
+
 	for elem in t.styles
 		# assert range is in text range
 		segment = intersect(elem.segment, 1:length(t.text))
-
 		@assert segment.start <= last(segment)
-		for style in elem.style
-			render(style..., font.gl.program.id)
-		end
+		
+		render(elem.style, font.gl.program.id)
+
 		render(t.text[chr2ind(t.text, segment.start):chr2ind(t.text, last(segment))], startCursor, font, displayableAray)
 	end
 end
