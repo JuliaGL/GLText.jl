@@ -1,7 +1,7 @@
 module GLText
-using ModernGL, GLUtil, MutableStrings, Events
+using ModernGL, GLUtil, Events
 
-export getFont,GLFont, TextField, StyledTextSegment, TextCursor
+export getFont,GLFont, TextField, StyledTextSegment, TextCursor, FontProperties
 
 
 immutable StyledTextSegment
@@ -14,23 +14,42 @@ type TextCursor
 	intend::Float32
 end
 type TextField
-	text::MutableASCIIString
+	text::String
 	styles::Array{StyledTextSegment, 1}
 	selection::Range
 	lines::Int
-	function TextField()
-		lines = count(x -> x == '\n' || x == '\r', text)
-		defaultStyle = Dict{ASCIIString, Any}(["textColor" => Float32[0,0,0,1], "backgroundColor" => Float32[0,0,0,0]])
-		styles = [StyledTextSegment(1:length(text), defaultStyle)]
-		new(text, styles, length(text):length(text), lines)
+	x::Float32
+	y::Float32
+	cursor::Int
+
+	function TextField(text::String, x, y)
+		lines 			= count(x -> x == '\n' || x == '\r', text) + 1
+		defaultStyle 	= Dict{ASCIIString, Any}(["textColor" => Float32[0,0,0,1], "backgroundColor" => Float32[0,0,0,0]])
+		styles 			= [StyledTextSegment(1:length(text), defaultStyle)]
+		new(text, styles, length(text):length(text), lines, x, y, length(text))
+	end
+
+	function TextField(text::String, styles::Array{StyledTextSegment, 1}, x, y)
+		lines 			= count(char -> char == '\n' || char == '\r', text)
+		new(text, styles, length(text):length(text), lines, x, y, length(text))
+	end
+
+	function TextField(text::String,
+			styles::Array{StyledTextSegment, 1},
+			selection::Range,
+			lines::Int,
+			x, y)
+		new(text, styles, selection, lines, x, y, length(text))
 	end
 end
 
-
+type FontProperties
+	lineHeight::GLfloat
+    advance::GLfloat
+end
 
 type GLFont
-    lineHeight::GLfloat
-    advance::GLfloat
+    properties::FontProperties
     gl::GLRenderObject
 	
 	function GLFont(name::String)
@@ -73,31 +92,27 @@ type GLFont
 	    push!(gl.preRenderFunctions, (enableTransparency, ()))
 	    verts 	= 0
 	    uv 		= 0
-	    new(lineHeight, advance, gl)
+	    new(FontProperties(lineHeight, advance), gl)
 	end
 end
 
 
-function initGLText()
-	rootFolder = Pkg.dir() * "/GLText/src/"
-	global textShader   = GLProgram(rootFolder*"textShader") 
-	global standardFont = GLFont(rootFolder*"VeraMono")
-end
+
+
 function getFont()
 	standardFont
 end
 
-initAfterContextCreation(initGLText)
 
 import GLUtil.render
 
 
-function render(text::Union(MutableASCIIString, ASCIIString), cursor::TextCursor, font::GLFont, displayableAray::Shape)
+function render(text::String, cursor::TextCursor, font::GLFont, displayableAray::Shape)
 	for char in text
         if char == '\t'
-        	cursor.x += font.advance * 3
+        	cursor.x += font.properties.advance * 3
         elseif char == '\r' || char == '\n'
-        	cursor.y -= font.lineHeight
+        	cursor.y -= font.properties.lineHeight
          	cursor.x = cursor.intend
         else
             if inside(displayableAray, cursor.x, cursor.y)
@@ -105,21 +120,35 @@ function render(text::Union(MutableASCIIString, ASCIIString), cursor::TextCursor
                 #in the GLBuffer for the text triangle data, there are six verts per char
     			glDrawArrays(GL_TRIANGLES, int(char) * 6, 6)
             end
-            cursor.x += font.advance
+            cursor.x += font.properties.advance
         end
     end
 end
 function render(t::TextField, font::GLFont, displayableAray::Shape = Rectangle(0, 0, 9999999,9999999))
-	startCursor = TextCursor(t.boundingBox.x, t.boundingBox.y + t.boundingBox.h, t.boundingBox.x)
+	render(font.gl)
+	startCursor = TextCursor(t.x, t.y, t.x)
 	for elem in t.styles
-		@assert elem.offset > 0
-		@assert elem.endof <= length(t.text)
+		# assert range is in text range
+		segment = intersect(elem.segment, 1:length(t.text))
 
+		@assert segment.start <= last(segment)
 		for style in elem.style
 			render(style..., font.gl.program.id)
 		end
-		render(t.text[elem.segment], startCursor, font, displayableAray)
+		render(t.text[chr2ind(t.text, segment.start):chr2ind(t.text, last(segment))], startCursor, font, displayableAray)
 	end
 end
+
+
+
+
+
+
+function initGLText()
+	rootFolder = Pkg.dir() * "/GLText/src/"
+	global textShader   = GLProgram(rootFolder*"textShader") 
+	global standardFont = GLFont(rootFolder*"VeraMono")
+end
+initAfterContextCreation(initGLText)
 
 end # module
