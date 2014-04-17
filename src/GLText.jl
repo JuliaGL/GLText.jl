@@ -18,7 +18,7 @@ type TextField
 	text::String
 	newLineIndexes::Array{UnitRange{Int}, 1}
 	styles::Array{StyledTextSegment, 1}
-	selection::Range
+	selection::UnitRange{Int}
 	x::Float32
 	y::Float32
 	function TextField(text::String, x::Real, y::Real)
@@ -65,15 +65,14 @@ end
 
 function findLine(newLineIndexes::Array{UnitRange{Int}, 1}, cursor::Int)
 	currentLine 		= newLineIndexes[1]
-	currentLineIndex 	= 1
 	index 				= 1
 	for elem in newLineIndexes
-		if in(cursor, elem)
+		if in(cursor, first(elem)-1:last(elem))
 			return index, elem
 		end
 		index += 1
 	end
-	return currentLineIndex, currentLine
+	return index, currentLine
 end
 
 
@@ -166,6 +165,7 @@ function render(t::TextField, font::GLFont, displayableAray::Shape = Rectangle(0
 	render(font.gl)
 
 	startLine, line = findLine(t.newLineIndexes, first(t.selection))
+
 	xPosition = first(t.selection) - first(line)
 	cursorX = t.x + (xPosition * font.properties.advance)
 	cursorY = t.y - ((startLine-1) * font.properties.lineHeight)
