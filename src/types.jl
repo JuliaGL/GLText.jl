@@ -83,7 +83,7 @@ type GLFont
 	    cam 				= OrthogonalCamera()
 	    registerEventAction(EventAction{WindowResized{0}}(x -> true, (), resize, (cam,)))
 		data 				= ["position" => verts, "uv" => uv, "fontTexture" => texture, "mvp" => cam]
-	    gl 					= GLRenderObject(textShader, data, primitiveMode = GL_TRIANGLES)
+	    gl 					= GLRenderObject(textShader, data)
 	    push!(gl.preRenderFunctions, (enableTransparency, ()))
 	    verts 	= 0
 	    uv 		= 0
