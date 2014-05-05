@@ -49,8 +49,10 @@ function addchar(event::KeyDown, t::TextField)
 	i = first(t.selection)
 	if length(t.selection) > 0
 		t.text = delete(t.text, t.selection)
+		i -= 1
 	end
 	t.text = addchar(t.text, char, i)
+	i = min(i, length(t.text)-1)
 	t.selection = i+1:i
 	update(t)
 end

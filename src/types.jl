@@ -13,7 +13,7 @@ end
 type TextField
 	text::UTF8String
 	newLineIndexes::Array{UnitRange{Int}, 1}
-	words::Array{SubString, 1}
+	#words::Array{SubString, 1}
 	styles::Array{StyledTextSegment, 1}
 	selection::UnitRange{Int}
 	x::Float32
@@ -21,7 +21,7 @@ type TextField
 	function TextField(text::String, x::Real, y::Real)
 		defaultStyle 	= Dict{ASCIIString, Any}(["textColor" => Float32[0,0,0,1], "backgroundColor" => Float32[0,0,0,0]])
 		styles 			= [StyledTextSegment(1:length(text), defaultStyle)]
-		new(utf8(text), build_line_indexes(text), styles, length(text):length(text)-1, float32(x), float32(y))
+		new(utf8(text), build_line_indexes(text), styles, length(text) : length(text)-1, float32(x), float32(y))
 	end
 
 	function TextField(text::String, styles::Array{StyledTextSegment, 1}, x::Real, y::Real)
