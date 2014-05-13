@@ -11,6 +11,7 @@ type TextCursor
 end
 
 type TextField
+	id::ASCIIString
 	text::UTF8String
 	newLineIndexes::Array{UnitRange{Int}, 1}
 	#words::Array{SubString, 1}
@@ -20,21 +21,21 @@ type TextField
 	y::Float32
 	area::Shape
 	hasFocus::Bool
-	function TextField(text::String, x::Real, y::Real, area::Shape)
+	function TextField(id::ASCIIString, text::String, x::Real, y::Real, area::Shape)
 		defaultStyle 	= Dict{ASCIIString, Any}(["textColor" => Float32[1,1,1,1], "backgroundColor" => Float32[0,0,0,0]])
 		styles 			= [StyledTextSegment(1:length(text), defaultStyle)]
-		new(utf8(text), build_line_indexes(text), styles, length(text) : length(text)-1, float32(x), float32(y), area, false)
+		new(id, utf8(text), build_line_indexes(text), styles, length(text) : length(text)-1, float32(x), float32(y), area, false)
 	end
 
-	function TextField(text::String, styles::Array{StyledTextSegment, 1}, x::Real, y::Real, area::Shape)
-		new(utf8(text), build_line_indexes(text), styles, length(text):length(text)-1, float32(x), float32(y), area, false)
+	function TextField(id::ASCIIString,text::String, styles::Array{StyledTextSegment, 1}, x::Real, y::Real, area::Shape)
+		new(id, utf8(text), build_line_indexes(text), styles, length(text):length(text)-1, float32(x), float32(y), area, false)
 	end
 
-	function TextField(text::String,
+	function TextField(id::ASCIIString,text::String,
 			styles::Array{StyledTextSegment, 1},
 			selection::Range,
 			x::Real, y::Real, area::Shape)
-		new(utf8(text), build_line_indexes(text), styles, selection, float32(x), float32(y), area, false)
+		new(id, utf8(text), build_line_indexes(text), styles, selection, float32(x), float32(y), area, false)
 	end
 end
 
