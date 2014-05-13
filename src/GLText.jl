@@ -1,5 +1,6 @@
 module GLText
 using ModernGL, GLUtil, Events
+import GLUtil.render
 
 export getfont, build_line_indexes, findline
 
@@ -39,12 +40,6 @@ function findline(newLineIndexes::Array{UnitRange{Int}, 1}, cursor::Int)
 	end
 	return index, currentLine
 end
-include("types.jl")
-include("textEditing.jl")
-include("render.jl")
-
-
-
 
 
 
@@ -53,11 +48,19 @@ function getfont()
 end
 
 
+
+
 function inittext()
 	rootFolder = Pkg.dir() * "/GLText/src/"
 	global textShader   = GLProgram(rootFolder*"textShader") 
 	global standardFont = GLFont(rootFolder*"VeraMono")
 end
 initAfterContextCreation(inittext)
+
+
+include("types.jl")
+include("textField.jl")
+include("render.jl")
+
 
 end # module
