@@ -11,7 +11,7 @@ type TextCursor
 end
 
 type TextField
-	id::ASCIIString
+	id::Symbol
 	text::UTF8String
 	newLineIndexes::Array{UnitRange{Int}, 1}
 	#words::Array{SubString, 1}
@@ -21,17 +21,17 @@ type TextField
 	y::Float32
 	area::Shape
 	hasFocus::Bool
-	function TextField(id::ASCIIString, text::String, x::Real, y::Real, area::Shape)
+	function TextField(id::Symbol, text::String, x::Real, y::Real, area::Shape)
 		defaultStyle 	= Dict{ASCIIString, Any}(["textColor" => Float32[1,1,1,1], "backgroundColor" => Float32[0,0,0,0]])
 		styles 			= [StyledTextSegment(1:length(text), defaultStyle)]
 		new(id, utf8(text), build_line_indexes(text), styles, length(text) : length(text)-1, float32(x), float32(y), area, false)
 	end
 
-	function TextField(id::ASCIIString,text::String, styles::Array{StyledTextSegment, 1}, x::Real, y::Real, area::Shape)
+	function TextField(id::Symbol,text::String, styles::Array{StyledTextSegment, 1}, x::Real, y::Real, area::Shape)
 		new(id, utf8(text), build_line_indexes(text), styles, length(text):length(text)-1, float32(x), float32(y), area, false)
 	end
 
-	function TextField(id::ASCIIString,text::String,
+	function TextField(id::Symbol,text::String,
 			styles::Array{StyledTextSegment, 1},
 			selection::Range,
 			x::Real, y::Real, area::Shape)
@@ -84,7 +84,7 @@ type GLFont
 	    verts 				= GLBuffer(verts, 2)
 	    uv 					= GLBuffer(uv, 2)
 	    cam 				= OrthogonalCamera()
-	    registerEventAction(EventAction{WindowResized{0}}(x -> true, (), resize, (cam,)))
+	    registerEventAction(EventAction{WindowResized{Window}}(x -> true, (), resize, (cam,)))
 		data 				= ["position" => verts, "uv" => uv, "fontTexture" => texture, "mvp" => cam]
 	    gl 					= GLRenderObject(textShader, data)
 	    push!(gl.preRenderFunctions, (enableTransparency, ()))

@@ -1,5 +1,5 @@
 module GLText
-using ModernGL, GLUtil, Events
+using ModernGL, GLUtil, Events, GLFW
 import GLUtil.render
 
 export getfont, build_line_indexes, findline

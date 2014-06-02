@@ -16,7 +16,7 @@ function delete(s::UTF8String, i::Int)
 	return s[1:prevind(s, I)] * s[nextind(s, I):end]
 end
 
-function delete(event::KeyDown, t::TextField)
+function delete(event::UnicodeInput, t::TextField)
 	i = first(t.selection)
 	if length(t.selection) > 0
 		t.text = delete(t.text, t.selection)
@@ -27,7 +27,7 @@ function delete(event::KeyDown, t::TextField)
 	update(t)
 end
 
-function newline(event::KeyDown, t::TextField)
+function newline(event::UnicodeInput, t::TextField)
 	addchar(event, t)
 end
 
@@ -44,8 +44,8 @@ function addchar(s::UTF8String, char::UTF8String, i::Int)
 	return s[1:I] *char* s[startI:end]
 end
 
-function addchar(event::KeyDown, t::TextField)
-	char = utf8(string(event.key))
+function addchar(event::UnicodeInput, t::TextField)
+	char = utf8(string(event.char))
 	i = first(t.selection)
 	if length(t.selection) > 0
 		t.text = delete(t.text, t.selection)

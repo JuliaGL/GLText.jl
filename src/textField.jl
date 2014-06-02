@@ -1,5 +1,5 @@
-using GLWindow
-export select, update, delete, addchar, newline, TextField1D, TextField2D, TextFieldUpdated
+using GLWindow, GLFW
+export select, update, delete, addchar, newline, TextField1D, TextField2D, Updated
 
 function delete(s::UTF8String, r::Range{Int})
 	i = chr2ind(s, first(r))
@@ -17,7 +17,7 @@ function delete(s::UTF8String, i::Int)
 	return s[1:prevind(s, I)] * s[nextind(s, I):end]
 end
 
-function delete(event::KeyDown, t::TextField)
+function delete(event::KeyPressed, t::TextField)
 	i = first(t.selection)
 	if length(t.selection) > 0
 		t.text = delete(t.text, t.selection)
@@ -26,12 +26,12 @@ function delete(event::KeyDown, t::TextField)
 	end
 	t.selection = max(i-1, 0) : i-2
 	update(t)
-	publishEvent(TextFieldUpdated{0}(t))
+	publishEvent(Updated(t))
 end
 
-function newline(event::KeyDown, t::TextField)
+function newline(event::KeyPressed, t::TextField)
 	addchar(event, t)
-	publishEvent(TextFieldUpdated{0}(t))
+	publishEvent(Updated(t))
 end
 
 addchar(s::UTF8String, char::Char, i::Int) = addchar(s, utf8(string(char)), i)
@@ -47,8 +47,9 @@ function addchar(s::UTF8String, char::UTF8String, i::Int)
 	return s[1:I] *char* s[startI:end]
 end
 
-function addchar(event::KeyDown, t::TextField)
-	char = utf8(string(event.key))
+function addchar(event::UnicodeInput, t::TextField)
+
+	char = utf8(string(event.char))
 	i = first(t.selection)
 	if length(t.selection) > 0
 		t.text = delete(t.text, t.selection)
@@ -58,7 +59,7 @@ function addchar(event::KeyDown, t::TextField)
 	i = min(i, length(t.text)-1)
 	t.selection = i+1:i
 	update(t)
-	publishEvent(TextFieldUpdated{0}(t))
+	publishEvent(Updated(t))
 end
 
 
@@ -141,83 +142,63 @@ function select(direction::ASCIIString, t::TextField, f::FontProperties)
 end
 
 
-scroll(event, t) = t.y += event.key == 4 ? -30 : 30
-
-const  GLUT_KEY_LEFT                   = 0x0064
-const  GLUT_KEY_UP                     = 0x0065
-const  GLUT_KEY_RIGHT                  = 0x0066
-const  GLUT_KEY_DOWN                   = 0x0067
+scroll(event, t) = t.y += event.yOffset * 30
 
 
-function select(event::KeyUp, t::TextField, f::FontProperties)
-	if event.key == GLUT_KEY_LEFT
-		direction = "left"
-	elseif event.key == GLUT_KEY_RIGHT
-		direction = "right"
-	elseif event.key == GLUT_KEY_UP
-		direction = "up"
-	elseif event.key == GLUT_KEY_DOWN
-		direction = "down"
-	end
-	t.selection = select(direction, t, f)
-end
+
 
 function render(t::TextField, f::GLFont)
 	render(f.gl)
 	render(t, f)
 end
-function TextField2D(id::String, text::String, x, y, area::Shape)
+
+
+changefocus(event, t, rect) = t.hasFocus = inside(rect, event.x, event.y)
+
+function TextField2D(id::Symbol, text::String, x, y, area::Shape)
 	font 	= getfont()
 	t 		= TextField(id, text, x, y, area)
-	registerEventAction(EventAction{MouseClicked{0}}(left_click_down, (), (event, t, rect) -> t.hasFocus = inside(rect, event.x, event.y), (t, area)))
 
-	registerEventAction(EventAction{KeyDown{0}}((x,tx) -> tx.hasFocus && !x.special && x.key == '\b', (t, ), 
-		delete, (t,)))
-	registerEventAction(EventAction{KeyDown{0}}((x,tx) -> tx.hasFocus && !x.special && isprint(x.key), (t,), 
-		addchar, (t,)))
-	registerEventAction(EventAction{KeyDown{0}}((x,tx) -> tx.hasFocus && x.special  && x.key == '\n' || x.key == '\r', (t,), 
-		newline, (t,)))
+	registerEventAction(MouseClicked{Window}, leftclickdown, changefocus, (t, area))
 
-	registerEventAction(EventAction{MouseClicked{0}}((x,) -> x.key == 0 && x.status == 0, (), 
-		select, (t, font.properties)))
-	registerEventAction(EventAction{MouseClicked{0}}((x,tx) -> tx.hasFocus && (x.key == 4 || x.key == 3), (t,), 
-		scroll, (t,)))
+	registerEventAction(KeyPressed{Window}, (x, tx) -> x.key == GLFW.KEY_BACKSPACE && tx.hasFocus  , (t, ), delete, (t,))
 
-	registerEventAction(EventAction{KeyUp{0}}(
-		(x,tx) -> tx.hasFocus && x.special && (x.key == GLUT_KEY_UP || x.key == GLUT_KEY_DOWN || x.key == GLUT_KEY_RIGHT || x.key == GLUT_KEY_LEFT), (t,), 
-		select, (t, font.properties)))
+	registerEventAction(UnicodeInput{Window}, (_, tx) -> tx.hasFocus, (t,), addchar, (t,))
 
-	registerEventAction(EventAction{MouseDragged{0}}(x -> true, (), 
-		select, (t, font.properties)))
+	registerEventAction(KeyPressed{Window}, (x,tx) -> tx.hasFocus && x.key == GLFW.KEY_ENTER, (t,), newline, (t,))
+
+	registerEventAction(MouseClicked{Window}, leftclickup, select, (t, font.properties)) 
+
+	registerEventAction(Scrolled{Window}, (_, tx) -> tx.hasFocus, (t,), scroll, (t,))
+
+	#registerEventAction(KeyPressed, (x,tx) -> tx.hasFocus && (x.key == KEY_UP || x.key == KEY_DOWN || x.key == KEY_RIGHT || x.key == KEY_LEFT), (t,), 
+	#	select, (t, font.properties))
+
+	registerEventAction(MouseDragged{Window}, x -> true, select, (t, font.properties))
 
 	glDisplay(id, (t, font))
+
 	t
 end
-function TextField1D(id::String, text::String, x, y, area::Shape)
+function TextField1D(id::Symbol, text::String, x, y, area::Shape)
 	font 	= getfont()
 	text 	= replace(text, r"\n|\r", "")
 	t 		= TextField(id, text, x, y, area)
-	registerEventAction(EventAction{MouseClicked{0}}(left_click_down, (), (event, t, rect) -> t.hasFocus = inside(rect, event.x, event.y), (t, area)))
 
-	registerEventAction(EventAction{KeyDown{0}}((x,tx) -> tx.hasFocus && !x.special && x.key == '\b', (t,), 
-		delete, (t,)))
-	registerEventAction(EventAction{KeyDown{0}}((x,tx) -> tx.hasFocus && !x.special && isprint(x.key), (t,), 
-		addchar, (t,)))
+	registerEventAction(MouseClicked{Window}, leftclickdown, changefocus, (t, area))
 
-	registerEventAction(EventAction{MouseClicked{0}}(x -> x.key == 0 && x.status == 0, (), 
-		select, (t, font.properties)))
+	registerEventAction(KeyPressed{Window}, (x, tx) -> x.key == KEY_BACKSPACE && tx.hasFocus, (t, ), delete, (t,))
+	
+	registerEventAction(UnicodeInput{Window}, (_, tx) -> tx.hasFocus, (t,), addchar, (t,))
 
-	registerEventAction(EventAction{KeyUp{0}}(
-		(x,tx) -> tx.hasFocus && x.special && (x.key == GLUT_KEY_UP || x.key == GLUT_KEY_DOWN || x.key == GLUT_KEY_RIGHT || x.key == GLUT_KEY_LEFT), (t,), 
-		select, (t, font.properties)))
+	registerEventAction(MouseClicked{Window}, leftclickup, select, (t, font.properties)) 
 
-	registerEventAction(EventAction{MouseDragged{0}}(x -> true, (), 
-		select, (t, font.properties)))
+	registerEventAction(MouseDragged{Window}, x -> true, select, (t, font.properties))
 
 	glDisplay(id, (t, font))
 	t
 end
 
-immutable TextFieldUpdated{T} <: Event{T}
-	textfield::TextField
+immutable Updated{T} <: Event
+	source::T
 end
