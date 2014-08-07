@@ -1,16 +1,18 @@
-#version 110
+{{GLSL_VERSION}}
 
-varying vec2 v_textureCoordinate;
-uniform vec4 textColor;
-uniform vec4 backgroundColor;
-uniform sampler2D fontTexture;
+{{in}} vec2 frag_uv;
+uniform vec4 text_color;
+uniform vec4 background_color;
+uniform sampler2D font_texture;
+
+{{out}} vec4 fragment_color;
 
 void main(){
 
-	float 	alphaAbove	= (texture2D(fontTexture, v_textureCoordinate)).x;
-	float 	textAlpha 	= alphaAbove * textColor.a;
-	vec3 	color 		= mix(backgroundColor.rgb, textColor.rgb, alphaAbove);
+	float 	alphaAbove	= (texture2D(font_texture, frag_uv)).x;
+	float 	textAlpha 	= alphaAbove * text_color.a;
+	vec3 	color 		= mix(backgroundColor.rgb, text_color.rgb, alphaAbove);
 	float 	alpha 		= min(1.0 , backgroundColor.a + (1.0 - backgroundColor.a) * textAlpha);
 
-	gl_FragColor = vec4(color, alpha);
+	fragment_color 		= vec4(color, alpha);
 }
