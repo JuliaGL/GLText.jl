@@ -46,50 +46,63 @@ type FontProperties
     advance::GLfloat
 end
 
-type GLFont
-    properties::FontProperties
-    gl::GLRenderObject
-	
+immutable GLFont
+    data::Dict{Symbol, Any}
+	props::Vector{Vec2}
 	function GLFont(name::String)
-	    texture             = Texture("$(name).bmp")
 	    flStream            = open("$(name).txt")
 	    width               = int(readline(flStream))
 	    height              = int(readline(flStream))
 	    lineHeight::GLfloat = int(readline(flStream))
 	    advance::GLfloat 	= 0
 
-	    verts       = Float32[]
-	    uv          = Float32[]
+	    values                  = split(readline(flStream))
+        charCodet                = char(int(values[1]))
+        advancet                 = int(values[2])
+        xt::GLfloat              = int(values[3]) / width
+        x2t::GLfloat             = (int(values[3]) + advance) / width
+        yt::GLfloat              =  ((height - int(values[4])  - lineHeight) / height)
+        texLineHeightt::GLfloat  = lineHeight / height
 
+	    uv = vcat(Vec2[ 
+	        	Vec2(advancet, lineHeight),
+	            Vec2(xt,  yt),
+	            Vec2(xt,  yt + texLineHeightt), 
+	            Vec2(x2t, yt + texLineHeightt), 
+	            Vec2(x2t, yt)
+	        ]'
+        )
+	    i = 1
 	    for line in eachline(flStream)
 	        values                  = split(line)
 	        charCode                = char(int(values[1]))
 	        advance                 = int(values[2])
 	        x::GLfloat              = int(values[3]) / width
 	        x2::GLfloat             = (int(values[3]) + advance) / width
-	        y::GLfloat              = int(values[4]) / height
+	        y::GLfloat              = ((height - int(values[4]) - lineHeight) / height) 
 	        texLineHeight::GLfloat  = lineHeight / height
-	        charUV = [
-	            x, y + texLineHeight,
-	            x, y , 
-	            x2, y + texLineHeight, 
-	            x2, y+ texLineHeight,
-	            x, y ,
-	            x2, y]
-
-	        push!(verts, createQuad(0f0, 0f0, advance, lineHeight)...)
-	        push!(uv, charUV...)
+	        uv = vcat(uv, 
+		        Vec2[ 
+		        	Vec2(advance, lineHeight),
+		            Vec2(x,  y),
+		            Vec2(x,  y + texLineHeight), 
+		            Vec2(x2, y + texLineHeight), 
+		            Vec2(x2, y)
+		        ]'
+	        )
+	        i += 1
 	    end
 	    close(flStream)
-	    verts 				= GLBuffer(verts, 2)
-	    uv 					= GLBuffer(uv, 2)
-	    cam 				= OrthogonalCamera()
-	    registerEventAction(EventAction{WindowResized{Window}}(x -> true, (), resize, (cam,)))
-		data 				= ["position" => verts, "uv" => uv, "fontTexture" => texture, "mvp" => cam]
-	    gl 					= GLRenderObject(textShader, data)
-	    push!(gl.preRenderFunctions, (enableTransparency, ()))
-	    verts 	= 0
-	    uv 		= 0
-	    new(FontProperties(lineHeight, advance), gl)
+	    println("uv:\n", typeof(uv))
+	    println("uv:\n", size(uv))
+		println("uv:\n",uv[109,1])
+
+		data 	= {
+			:uv_index 		=> GLBuffer(GLint[1:6], 1), 
+			:indexes 		=> indexbuffer(GLuint[0:5]), 
+			:uv 			=> Texture(uv), 
+			:font_texture 	=> Texture("$(name).bmp")
+		}
+	    new(data, vec(uv[1,:]))
 	end
 end

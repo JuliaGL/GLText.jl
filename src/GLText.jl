@@ -1,6 +1,5 @@
 module GLText
-using ModernGL, GLUtil, Events, GLFW
-import GLUtil.render
+using ModernGL, GLAbstraction, GLFW
 
 export getfont, build_line_indexes, findline
 
@@ -50,17 +49,17 @@ end
 
 
 
-function inittext()
-	rootFolder = Pkg.dir() * "/GLText/src/"
-	global textShader   = GLProgram(rootFolder*"textShader") 
-	global standardFont = GLFont(rootFolder*"VeraMono")
-end
-initAfterContextCreation(inittext)
+#function inittext()
+#	rootFolder = Pkg.dir() * "/GLText/src/"
+#	global textShader   = TemplateProgram(rootFolder*"textShader") 
+#	global standardFont = GLFont(rootFolder*"VeraMono")
+#end
+#initAfterContextCreation(inittext)
 
 
 include("types.jl")
-include("textField.jl")
-include("render.jl")
+#include("textField.jl")
+#include("render.jl")
 
 
 end # module
