@@ -63,7 +63,7 @@ void main(){
 	vec3 offsetvec 		= {{offset_calculation}}
 
 	vec3 vertexvec 	= vec3(vertex * scalevec, 0) + (offsetvec *vec3(scalevec,1));
-	gl_Position 	= projectionview * vec4((qmult(rotationq, vec3(vertex,0)) + offsetvec) * vec3(scalevec,1), 1);
+	gl_Position 	= projectionview *vec4(qmult(rotation, vec3(vertex, 0) * vec3(scalevec,1)) + offsetvec, 1);
 	
 	float hcol = 0.0;
 	if(104 == texelFetch(text, index, 0).r)

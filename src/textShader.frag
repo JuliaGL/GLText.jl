@@ -1,9 +1,9 @@
 {{GLSL_VERSION}}
 
-{{in}} vec2 frag_uv;
-{{in}} vec4 frag_color;
-{{in}} vec4 frag_backgroundcolor;
-uniform sampler2D font_texture;
+{{in}} vec2        frag_uv;
+{{in}} vec4 	   frag_color;
+{{in}} vec4 	   frag_backgroundcolor;
+uniform sampler2D  font_texture;
 
 {{out}} vec4 fragment_color;
 

@@ -56,7 +56,7 @@ immutable GLFont
 	    lineHeight::GLfloat = int(readline(flStream))
 	    advance::GLfloat 	= 0
 
-	    values                  = split(readline(flStream))
+	    values                   = split(readline(flStream))
         charCodet                = char(int(values[1]))
         advancet                 = int(values[2])
         xt::GLfloat              = int(values[3]) / width
@@ -93,11 +93,8 @@ immutable GLFont
 	        i += 1
 	    end
 	    close(flStream)
-	    println("uv:\n", typeof(uv))
-	    println("uv:\n", size(uv))
-		println("uv:\n",uv[109,1])
 
-		data 	= {
+		data = {
 			:uv_index 		=> GLBuffer(GLint[1:6], 1), 
 			:indexes 		=> indexbuffer(GLuint[0:5]), 
 			:uv 			=> Texture(uv), 
