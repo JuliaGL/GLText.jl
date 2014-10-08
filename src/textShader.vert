@@ -9,6 +9,7 @@
 {{offset_type}} offset;
 
 {{color_type}} color;
+uniform sampler1D color_lookup;
 {{backgroundcolor_type}} backgroundcolor;
 //{{style_type}} style;
 
@@ -17,6 +18,8 @@ uniform uint objectid;
 //uniform int index_offset;
 {{text_type}} text;
 
+uniform vec3 newline;
+uniform vec3 advance;
 
 uniform sampler2D uv;
 
@@ -53,10 +56,19 @@ int fetchglyph(usampler1D glyphs, int index)
 {
 	return int(texelFetch(glyphs, index, 0).r);
 }
-int fetchglyph(usampler2D glyphs, int index)
+uvec4 fetchglyph(usampler2D glyphs, int index)
 {
 	int width = texturewidth(glyphs);
-	return int(texelFetch(glyphs, ivec2(index % width, index/width), 0).r);
+	return texelFetch(glyphs, ivec2(index % width, index/width), 0).rgba;
+}
+
+vec3 position(int index, usampler2D offset)
+{
+	int width     = texturewidth(offset);
+	ivec2 tindex  = ivec2(index % width, index / width);
+	float linemultiplikator    = float(texelFetch(offset, tindex, 0).x);
+	float advancemultiplikator = float(texelFetch(offset, tindex, 0).y);
+	return (linemultiplikator * newline) + (advancemultiplikator * advance);
 }
 vec3 position(int index, sampler2D offset)
 {
@@ -75,30 +87,45 @@ vec3 position(int index, sampler1D offset)
 	return (line*newline) + (linepos*advance);
 }
 
-vec3 position(int index, mat3x2 offset)
+vec3 position(int index, vec2 offset)
 {
-	int width 		= texturewidth(text);
-	int linepos		= index / width;
-	int line 		= index % width;
-	vec3 advance 	= vec3(offset[0].x, 0, 0);
-	vec3 newline 	= vec3(0, offset[2].x*1.5 , 0); //offset[0].xyz;
-	
-	return (line*newline) + (linepos*advance);
+	int width 				 = texturewidth(text);
+	int linemultiplikator    = index / width;
+	int advancemultiplikator = index % width;
+
+	return (linemultiplikator * newline) + (advancemultiplikator * advance);
 }
 vec3 position(int index, vec3 offset)
 {
 	return index*offset;
 }
 
-const int SPACE = 32;
+vec4 fetchtexture(sampler2D tex, int index)
+{
+    int width = texturewidth(tex);
+    return texelFetch(tex, ivec2(index % width, index/width), 0).rgba;
+}
+uvec4 fetchtexture(usampler2D tex, int index)
+{
+    int width = texturewidth(tex);
+    return texelFetch(tex, ivec2(index % width, index/width), 0).rgba;
+}
+const int SPACE 	= 32;
+const int NEWLINE 	= 10;
 
 void main(){
 
 	int index 		   = gl_InstanceID;
-	int glyph 		   = fetchglyph(text, index);
-	vec3 glyphposition = position(index, offset);
+	
+	ivec4 textvalues   = ivec4(fetchglyph(text, index));
+	int glyph 		   = textvalues.x;
 
-	vec3 glyph_prop	= vec3(24, 12, 0); // lineheigt + advance
+	if(glyph == NEWLINE)
+	{
+		glyph = SPACE; // I don't remove newlines from the text, so they need to be removed here
+	}
+	vec3 glyphposition = (textvalues.y * newline) + (textvalues.z * advance);
+
 	vec3 vertex 	= glyphposition; // if uv_index is vert 1 or 6
 	int  uv_index2  = 1;
 	if (uv_index == 2)
@@ -120,7 +147,7 @@ void main(){
 	gl_Position 		 = projectionview * model * vec4(vertex, 1);
 	
 	//frag outs
-	frag_color 			 = {{color_calculation}};
+	frag_color 			 = texelFetch(color_lookup, int(textvalues.a), 0);
 	frag_backgroundcolor = {{backgroundcolor_calculation}}
 	frag_uv			 	 = texelFetch(uv, ivec2(glyph, uv_index2), 0).xy; // uvs are saved in 2*4*256 texture, 2 uv coordinates 4 vertices, 256 chars
 	frag_objectid 		 = uvec2(objectid, index);
