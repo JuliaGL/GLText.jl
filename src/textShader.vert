@@ -9,7 +9,7 @@
 {{offset_type}} offset;
 
 {{color_type}} color;
-uniform sampler1D color_lookup;
+uniform sampler1D style_group;
 {{backgroundcolor_type}} backgroundcolor;
 //{{style_type}} style;
 
@@ -147,7 +147,7 @@ void main(){
 	gl_Position 		 = projectionview * model * vec4(vertex, 1);
 	
 	//frag outs
-	frag_color 			 = texelFetch(color_lookup, int(textvalues.a), 0);
+	frag_color 			 = texelFetch(style_group, int(textvalues.a), 0);
 	frag_backgroundcolor = {{backgroundcolor_calculation}}
 	frag_uv			 	 = texelFetch(uv, ivec2(glyph, uv_index2), 0).xy; // uvs are saved in 2*4*256 texture, 2 uv coordinates 4 vertices, 256 chars
 	frag_objectid 		 = uvec2(objectid, index);

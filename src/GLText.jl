@@ -1,5 +1,8 @@
 module GLText
-using ModernGL, GLAbstraction, GLFW
+using ModernGL
+using GLAbstraction
+using GLFW
+using Compat
 
 export getfont, build_line_indexes, findline
 
