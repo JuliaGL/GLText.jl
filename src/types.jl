@@ -22,7 +22,7 @@ type TextField
 	area::Shape
 	hasFocus::Bool
 	function TextField(id::Symbol, text::String, x::Real, y::Real, area::Shape)
-		defaultStyle 	= Dict{ASCIIString, Any}(["textColor" => Float32[1,1,1,1], "backgroundColor" => Float32[0,0,0,0]])
+		defaultStyle 	= @compat Dict{ASCIIString, Any}("textColor" => Float32[1,1,1,1], "backgroundColor" => Float32[0,0,0,0])
 		styles 			= [StyledTextSegment(1:length(text), defaultStyle)]
 		new(id, utf8(text), build_line_indexes(text), styles, length(text) : length(text)-1, float32(x), float32(y), area, false)
 	end
