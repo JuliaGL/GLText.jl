@@ -95,10 +95,10 @@ immutable GLFont
 	    close(flStream)
 
 		data = @compat Dict{Symbol, Any}(
-			:uv_index 		=> GLBuffer(GLint[1:6], 1), 
-			:indexes 		=> indexbuffer(GLuint[0:5]), 
-			:uv 			=> Texture(uv), 
-			:font_texture 	=> Texture("$(name).bmp")
+			:dontdelete_uv_index 		=> GLBuffer(GLint[1:6], 1), 
+			:dontdelete_indexes 		=> indexbuffer(GLuint[0:5]), 
+			:dontdelete_uv 				=> Texture(uv), 
+			:dontdelete_font_texture 	=> Texture("$(name).bmp")
 		)
 	    new(data, vec(uv[1,:]))
 	end

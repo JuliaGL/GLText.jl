@@ -12,8 +12,7 @@ function getfont()
 end
 
 function inittext()
-	rootFolder = Pkg.dir() * "/GLText/src/"
-	global standardFont = GLFont(rootFolder*"VeraMono")
+	global standardFont = GLFont(Pkg.dir("GLText", "src", "VeraMono"))
 end
 init_after_context_creation(inittext)
 

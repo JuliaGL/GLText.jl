@@ -2,7 +2,7 @@
 {{GLSL_EXTENSIONS}}
 
 // Input vertex data, different for all executions of this shader.
-{{in}} int uv_index;
+{{in}} int dontdelete_uv_index;
 
 // Values that stay constant for the whole mesh.
 
@@ -21,7 +21,7 @@ uniform uint objectid;
 uniform vec3 newline;
 uniform vec3 advance;
 
-uniform sampler2D uv;
+uniform sampler2D dontdelete_uv;
 
 uniform mat4 projectionview, model;
 
@@ -126,19 +126,19 @@ void main(){
 	}
 	vec3 glyphposition = (textvalues.y * newline) + (textvalues.z * advance);
 
-	vec3 vertex 	= glyphposition; // if uv_index is vert 1 or 6
+	vec3 vertex 	= glyphposition; // if dontdelete_uv_index is vert 1 or 6
 	int  uv_index2  = 1;
-	if (uv_index == 2)
+	if (dontdelete_uv_index == 2)
 	{
 		uv_index2 = 2;
 		vertex = glyphposition + vec3(0,24,0);
 	}
-	else if  ((uv_index == 3) || (uv_index == 4))
+	else if  ((dontdelete_uv_index == 3) || (dontdelete_uv_index == 4))
 	{
 		uv_index2 = 3;
 		vertex = glyphposition + vec3(12, 24,0);
 	}
-	else if (uv_index == 5)
+	else if (dontdelete_uv_index == 5)
 	{
 		uv_index2 = 4;
 		vertex = glyphposition + vec3(12,0,0);
@@ -149,7 +149,7 @@ void main(){
 	//frag outs
 	frag_color 			 = texelFetch(style_group, int(textvalues.a), 0);
 	frag_backgroundcolor = {{backgroundcolor_calculation}}
-	frag_uv			 	 = texelFetch(uv, ivec2(glyph, uv_index2), 0).xy; // uvs are saved in 2*4*256 texture, 2 uv coordinates 4 vertices, 256 chars
+	frag_uv			 	 = texelFetch(dontdelete_uv, ivec2(glyph, uv_index2), 0).xy; // uvs are saved in 2*4*256 texture, 2 dontdelete_uv coordinates 4 vertices, 256 chars
 	frag_objectid 		 = uvec2(objectid, index);
 }
 

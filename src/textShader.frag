@@ -6,14 +6,14 @@
 
 flat {{in}} uvec2  frag_objectid;
 
-uniform sampler2D  font_texture;
+uniform sampler2D  dontdelete_font_texture;
 
 {{out}} vec4 	   fragment_color;
 {{out}} uvec2 	   fragment_groupid;
 
 void main(){
 
-	float 	alphaAbove	= texture(font_texture, frag_uv).r;
+	float 	alphaAbove	= texture(dontdelete_font_texture, frag_uv).r;
 	float 	textAlpha 	= alphaAbove * frag_color.a;
 	vec3 	color 		= mix(frag_backgroundcolor.rgb, frag_color.rgb, alphaAbove);
 	float 	alpha 		= min(1.0 , frag_backgroundcolor.a + (1.0 - frag_backgroundcolor.a) * textAlpha);
