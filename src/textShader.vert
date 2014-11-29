@@ -128,20 +128,22 @@ void main(){
 
 	vec3 vertex 	= glyphposition; // if dontdelete_uv_index is vert 1 or 6
 	int  uv_index2  = 1;
+	float glyphx = 12.0;
+	float glyphy = 24.0;
 	if (dontdelete_uv_index == 2)
 	{
 		uv_index2 = 2;
-		vertex = glyphposition + vec3(0,24,0);
+		vertex = glyphposition + vec3(0,glyphy,0);
 	}
 	else if  ((dontdelete_uv_index == 3) || (dontdelete_uv_index == 4))
 	{
 		uv_index2 = 3;
-		vertex = glyphposition + vec3(12, 24,0);
+		vertex = glyphposition + vec3(glyphx, glyphy,0);
 	}
 	else if (dontdelete_uv_index == 5)
 	{
 		uv_index2 = 4;
-		vertex = glyphposition + vec3(12,0,0);
+		vertex = glyphposition + vec3(glyphx,0,0);
 	}
 
 	gl_Position 		 = projectionview * model * vec4(vertex, 1);
