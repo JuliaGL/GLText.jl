@@ -63,15 +63,14 @@ immutable GLFont
         x2t::GLfloat             = (int(values[3]) + advance) / width
         yt::GLfloat              =  ((height - int(values[4])  - lineHeight) / height)
         texLineHeightt::GLfloat  = lineHeight / height
-
-	    uv = vcat(Vec2[ 
-	        	Vec2(advancet, lineHeight),
-	            Vec2(xt,  yt),
-	            Vec2(xt,  yt + texLineHeightt), 
-	            Vec2(x2t, yt + texLineHeightt), 
+        a = Vec2[ 
+	        	Vec2(advancet, lineHeight) 
+	            Vec2(xt,  yt) 
+	            Vec2(xt,  yt + texLineHeightt)
+	            Vec2(x2t, yt + texLineHeightt) 
 	            Vec2(x2t, yt)
-	        ]'
-        )
+	        ]
+	    uv = vcat(a)
 	    i = 1
 	    for line in eachline(flStream)
 	        values                  = split(line)
@@ -81,15 +80,14 @@ immutable GLFont
 	        x2::GLfloat             = (int(values[3]) + advance) / width
 	        y::GLfloat              = ((height - int(values[4]) - lineHeight) / height) 
 	        texLineHeight::GLfloat  = lineHeight / height
-	        uv = vcat(uv, 
-		        Vec2[ 
-		        	Vec2(advance, lineHeight),
-		            Vec2(x,  y),
-		            Vec2(x,  y + texLineHeight), 
-		            Vec2(x2, y + texLineHeight), 
+	        a = Vec2[ 
+		        	Vec2(advance, lineHeight)
+		            Vec2(x,  y)
+		            Vec2(x,  y + texLineHeight)
+		            Vec2(x2, y + texLineHeight)
 		            Vec2(x2, y)
-		        ]'
-	        )
+		        ]
+	        uv = vcat(uv, a)
 	        i += 1
 	    end
 	    close(flStream)
