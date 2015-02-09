@@ -64,8 +64,6 @@ immutable GLFont
         yt::GLfloat              =  ((height - int(values[4])  - lineHeight) / height)
         texLineHeightt::GLfloat  = lineHeight / height
         a = Vec2[Vec2(advancet, lineHeight) Vec2(xt,  yt) Vec2(xt,  yt + texLineHeightt) Vec2(x2t, yt + texLineHeightt) Vec2(x2t, yt)]
-	        println("va: ", typeof(a))
-	        println("va: ", size(a))
 	    uv = vcat(a)
 	    i = 1
 	    for line in eachline(flStream)
@@ -81,8 +79,6 @@ immutable GLFont
 	        i += 1
 	    end
 	    close(flStream)
-	    println("size of uv: ", size(uv))
-	    println("type of uv: ", typeof(uv))
 		data = @compat Dict{Symbol, Any}(
 			:dontdelete_uv_index 		=> GLBuffer(GLint[1:6], 1), 
 			:dontdelete_indexes 		=> indexbuffer(GLuint[0:5]), 
