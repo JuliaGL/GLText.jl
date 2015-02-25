@@ -63,8 +63,15 @@ immutable GLFont
         x2t::GLfloat             = (int(values[3]) + advance) / width
         yt::GLfloat              =  ((height - int(values[4])  - lineHeight) / height)
         texLineHeightt::GLfloat  = lineHeight / height
-        a = Vec2[Vec2(advancet, lineHeight) Vec2(xt,  yt) Vec2(xt,  yt + texLineHeightt) Vec2(x2t, yt + texLineHeightt) Vec2(x2t, yt)]
-	    uv = vcat(a)
+
+        tmp_uv 	  = Array(Vec2, 1, 5)
+        tmp_uv[1] = Vec2(advancet, lineHeight)
+        tmp_uv[2] = Vec2(xt,  yt)
+        tmp_uv[3] = Vec2(xt,  yt + texLineHeightt)
+        tmp_uv[4] = Vec2(x2t, yt + texLineHeightt)
+        tmp_uv[5] = Vec2(x2t, yt)
+
+	    uv = vcat(tmp_uv)
 	    i = 1
 	    for line in eachline(flStream)
 	        values                  = split(line)
@@ -74,14 +81,18 @@ immutable GLFont
 	        x2::GLfloat             = (int(values[3]) + advance) / width
 	        y::GLfloat              = ((height - int(values[4]) - lineHeight) / height) 
 	        texLineHeight::GLfloat  = lineHeight / height
-	        a = Vec2[Vec2(advance, lineHeight) Vec2(x,  y) Vec2(x,  y + texLineHeight) Vec2(x2, y + texLineHeight) Vec2(x2, y)]
-	        uv = vcat(uv, a)
+	        tmp_uv[1] = Vec2(advance, lineHeight)
+	        tmp_uv[2] = Vec2(x,  y)
+	        tmp_uv[3] = Vec2(x,  y + texLineHeight)
+	        tmp_uv[4] = Vec2(x2, y + texLineHeight)
+	        tmp_uv[5] = Vec2(x2, y)
+	        uv = vcat(uv, tmp_uv)
 	        i += 1
 	    end
 	    close(flStream)
 		data = @compat Dict{Symbol, Any}(
-			:dontdelete_uv_index 		=> GLBuffer(GLint[1:6], 1), 
-			:dontdelete_indexes 		=> indexbuffer(GLuint[0:5]), 
+			:dontdelete_uv_index 		=> GLBuffer(GLint[1:6;], 1), 
+			:dontdelete_indexes 		=> indexbuffer(GLuint[0:5;]), 
 			:dontdelete_uv 				=> Texture(uv), 
 			:dontdelete_font_texture 	=> Texture("$(name).bmp")
 		)
