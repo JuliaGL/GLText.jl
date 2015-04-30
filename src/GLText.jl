@@ -1,4 +1,5 @@
 module GLText
+
 using ModernGL
 using GLAbstraction
 using GLFW
