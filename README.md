@@ -1,5 +1,5 @@
 # GLText
 
-[![Build Status](https://travis-ci.org/SimonDanisch/GLText.jl.svg)](https://travis-ci.org/SimonDanisch/GLText.jl)
+## DEPRECATED
 
-Light weight text rendering with OpenGL, using instance rendering for high speed.
+look at [GLVisualize](https://github.com/JuliaGL/GLVisualize.jl) for text rendering in Julia and OpenGL.
